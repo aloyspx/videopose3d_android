@@ -209,7 +209,7 @@ def videopose_model_load():
 
     checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
 
-    model_pos = TemporalModel(17, 2, 17, filter_widths=[3,3,3,3,3] , causal=False, dropout=False, channels=1024, dense=False)
+    model_pos = TemporalModel(17, 2, 17, filter_widths=[3,3,3,3,3] , causal=True, dropout=False, channels=1024, dense=False)
 
     #bypass CUDA for now to run only on CPU
     #model_pos = model_pos.cuda()

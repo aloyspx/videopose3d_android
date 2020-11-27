@@ -200,25 +200,41 @@ class TemporalModel(nn.Module):
         assert len(x.shape) == 4
         assert x.shape[-2] == self.num_joints_in
         assert x.shape[-1] == self.in_features
-        
-        x.contiguous(memory_format=torch.channels_last)
 
-        sz = x.shape[:3]
-        x = x.view(x.shape[0], x.shape[1], -1)
-        x = x.permute(0, 2, 1)
+        with torch.no_grad():
         
-        x = self._forward_blocks(x)
-        
-        x = x.permute(0, 2, 1)
-        x = x.view(sz[0], -1, self.num_joints_out, 3)
+            x.contiguous(memory_format=torch.channels_last)
+
+            sz = x.shape[:3]
+            x = x.view(x.shape[0], x.shape[1], -1)
+            x = x.permute(0, 2, 1)
+            
+            x = self._forward_blocks(x)
+            
+            x = x.permute(0, 2, 1)
+            x = x.view(sz[0], -1, self.num_joints_out, 3)
 
         
         return x
 
 
 def get_model():
+    #pretrained model checkpoint
+    chk_filename = '/home/nodog/docs/asp/checkpoint/cpn-pt-243.bin'
+
+    #load the checkpoint
+    checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
+
+    #create instance of our nn.Module
     m = TemporalModel(17, 2, 17, [3, 3, 3, 3, 3], causal=False, dropout=0.25)
+
+    #load weights, etc. from pretraining
+    m.load_state_dict(checkpoint['model_pos'])
+
+    #inference mode
     m.eval()
+
+    #return the model for torch script conversion
     return m
 
 #fuse some layers to save mem
